@@ -60,7 +60,13 @@ On Linux or macOS:
 Quickly compiles Java sources across all functional modules without packaging or running long tasks:
 
 ```powershell
-.\gradlew.bat --no-daemon "-Dorg.gradle.workers.max=1" :customclaims-core:compileJava :customclaims-protection:compileJava :customclaims-create:compileJava :customclaims-aeronautics:compileJava :customclaims-big-cannons:compileJava -q
+.\gradlew.bat --no-daemon --max-workers=1 :customclaims-core:compileJava :customclaims-protection:compileJava :customclaims-create:compileJava :customclaims-aeronautics:compileJava :customclaims-big-cannons:compileJava -q
+```
+
+On Linux or macOS:
+
+```sh
+./gradlew --no-daemon --max-workers=1 :customclaims-core:compileJava :customclaims-protection:compileJava :customclaims-create:compileJava :customclaims-aeronautics:compileJava :customclaims-big-cannons:compileJava -q
 ```
 
 ### 3. Build Distribution Jar Only

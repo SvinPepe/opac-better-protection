@@ -164,8 +164,10 @@ When the optional companion mod **Open Parties and Claims: Warfare** (`opac-warf
 ## Entity, Villager, and Storage Mechanics in 2.0
 
 In Better Protection 2.0:
-- **Villagers & Withering:** Hardcoded Wither summoning bans and intrusive villager damage hooks were removed. Entity protection and mob griefing rules are handled natively by vanilla Minecraft and Open Parties and Claims claim settings.
-- **Storage Access:** Storage protection is governed authoritatively by OPaC's native claim access lists and vanilla permissions, preventing duplicate or desynchronized lock checks.
+- **Villager & Mob Protection:** Entity damage and interaction protections are delegated directly to Open Parties and Claims claim settings (`/openpac-claims`). Claim owners can configure who can hurt or interact with peaceful mobs and villagers without Better Protection imposing rigid, unconfigurable hardcoded blocks.
+- **Wither & Mob Griefing:** Wither summoning restrictions and terrain destruction are governed by OPaC's claim flags and the vanilla `mobGriefing` game rule (`/gamerule mobGriefing false`). In peaceful claims, OPaC blocks Wither block destruction by default, preventing griefing without conflict.
+- **Storage Access:** Chest, barrel, and container protection is governed authoritatively by OPaC's native claim access lists and vanilla permissions, preventing duplicate or desynchronized lock checks.
+- **Contested Entity Exceptions:** The only entity bypass Better Protection manages directly is `entity_interaction.contested_exceptions` (default: `["corpse:corpse"]`), ensuring players in active war sieges can recover their inventory without claim permission errors.
 
 ## Troubleshooting & Operations
 

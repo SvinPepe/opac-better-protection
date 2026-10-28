@@ -84,7 +84,7 @@ CI parity (full jar build and tests):
 Focused fast compile:
 
 ```powershell
-.\gradlew.bat --no-daemon "-Dorg.gradle.workers.max=1" :customclaims-core:compileJava :customclaims-protection:compileJava :customclaims-create:compileJava :customclaims-aeronautics:compileJava :customclaims-big-cannons:compileJava -q
+.\gradlew.bat --no-daemon --max-workers=1 :customclaims-core:compileJava :customclaims-protection:compileJava :customclaims-create:compileJava :customclaims-aeronautics:compileJava :customclaims-big-cannons:compileJava -q
 ```
 
 Note: If running from an external terminal or subagent session, ensure the working directory is set to `c:\Users\svinpepe\opac-better-protection`.
