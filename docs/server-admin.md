@@ -161,13 +161,12 @@ When the optional companion mod **Open Parties and Claims: Warfare** (`opac-warf
    - **Create & Aeronautics Bores:** Mechanical drills, saws, and Aeronautics borehead bearings are permitted to operate in contested war chunks for war participants.
    - **Grave & Corpse Recovery:** The config setting `entity_interaction.contested_exceptions` (default: `["corpse:corpse"]`) grants participants an immediate OPaC bypass to right-click corpses/graves in contested war chunks to reclaim their inventory without claim access violations.
 
-## Entity, Villager, and Storage Mechanics in 2.0
+## Storage Access and Contested Entity Exceptions in 2.0
 
 In Better Protection 2.0:
-- **Villager & Mob Protection:** Entity damage and interaction protections are delegated directly to Open Parties and Claims claim settings (`/openpac-claims`). Claim owners can configure who can hurt or interact with peaceful mobs and villagers without Better Protection imposing rigid, unconfigurable hardcoded blocks.
-- **Wither & Mob Griefing:** Wither summoning restrictions and terrain destruction are governed by OPaC's claim flags and the vanilla `mobGriefing` game rule (`/gamerule mobGriefing false`). In peaceful claims, OPaC blocks Wither block destruction by default, preventing griefing without conflict.
+- **Legacy Entity Protections Removed:** Custom villager damage handlers and Wither summon blocking were removed in 2.0. Entity damage and mob griefing are governed authoritatively by Open Parties and Claims native claim flags (`/openpac-claims`) and vanilla game rules (`mobGriefing`).
 - **Storage Access:** Chest, barrel, and container protection is governed authoritatively by OPaC's native claim access lists and vanilla permissions, preventing duplicate or desynchronized lock checks.
-- **Contested Entity Exceptions:** The only entity bypass Better Protection manages directly is `entity_interaction.contested_exceptions` (default: `["corpse:corpse"]`), ensuring players in active war sieges can recover their inventory without claim permission errors.
+- **Contested Entity Exceptions:** The primary entity bypass Better Protection manages directly is `entity_interaction.contested_exceptions` (default: `["corpse:corpse"]`), ensuring players in active war sieges can recover their inventory without claim permission errors.
 
 ## Troubleshooting & Operations
 

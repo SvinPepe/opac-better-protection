@@ -1,7 +1,7 @@
 modLoader="javafml"
 loaderVersion="${loader_version_range}"
 license="${mod_license}"
-issueTrackerURL="https://github.com/SvinPepe/customclaims/issues"
+issueTrackerURL="https://github.com/SvinPepe/opac-better-protection/issues"
 showAsResourcePack=false
 
 [[jarJar]]
@@ -21,7 +21,7 @@ config="customclaims_big_cannons.mixins.json"
 modId="opac_better_protection"
 version="${mod_version}"
 displayName="Open Parties and Claims: Better Protection"
-displayURL="https://github.com/SvinPepe/customclaims"
+displayURL="https://github.com/SvinPepe/opac-better-protection"
 authors="${mod_authors}"
 credits="Built for NeoForge servers that use Open Parties and Claims for claim rules and technical mod protections."
 description='''

@@ -45,10 +45,8 @@ It provides advanced claim protection mechanics, configurable side-level rules f
 - **Foreign Interaction Rate Limiting:**
   - Limits foreign (non-member) block breaks and placements in peaceful claims (`foreign_interaction.block_break_limit`, `foreign_interaction.block_place_limit`).
   - Runtime session counters automatically reset on a configurable interval or via operator commands.
-- **Entity, Villager & Wither Protection:**
-  - Integrates natively with Open Parties and Claims to ensure villagers, passive mobs, and containers inside claimed land are fully protected from outsider harm and hostile destruction.
-  - Mob griefing and Wither destruction inside peaceful claims are governed cleanly through OPaC's authoritative claim flags and vanilla mechanics, eliminating duplicate conflicting event cancellations.
-  - Contested entity interaction bypasses (e.g. `corpse:corpse`) ensure war participants can recover items and access player corpses during active sieges without claim lockouts.
+- **Contested Entity & Corpse Exceptions:**
+  - Configurable entity interaction exceptions (`entity_interaction.contested_exceptions`, defaulting to `corpse:corpse`) allow war participants to retrieve items from their death markers or corpses inside contested siege territory without claim access violations.
 - **Claim Rules Management (/claimrules & GUI):**
   - Intuitive `/claimrules` command suite for inspecting status, toggling rules, and managing limits.
   - Optional client GUI accessible via `/claimrules gui` or the `Open Claim Rules` keybind (defaults to `K` in the `CustomClaims` category).
