@@ -1,129 +1,128 @@
-# Development
+# Development Guide
 
-This repository uses Gradle, NeoForge userdev, Java `21`, and a `1.21.1`
-compile baseline for **Open Parties and Claims: Better Protection**.
+This repository contains the source code for **Open Parties and Claims: Better Protection**, an advanced claim moderation and technical mod integration addon for NeoForge.
 
-## Setup
+---
 
-Required locally:
+## Prerequisites
 
-- JDK `21`
-- Git
-- The Gradle wrapper included in this repository
+- **Java Development Kit (JDK):** Version `21` (Eclipse Temurin, Microsoft, or Oracle JDK 21).
+- **Git**
+- **Gradle:** Use the included wrapper (`gradlew` / `gradlew.bat`).
 
-The build resolves Minecraft/NeoForge and mod dependencies through configured
-Maven repositories, including Modrinth Maven for Open Parties and Claims,
-Create, Create Big Cannons, and related compat dependencies.
-Aeronautics/Offroad compat uses the local bundled jar in `libs/` for
-development runtime coverage.
+---
 
-This repository compiles against `Minecraft 1.21.1 + NeoForge 21.1.232`, while
-metadata allows experimental same-jar probes on Minecraft `[1.21.1,26.0)` and
-NeoForge `[21.1.232,26.0)`.
+## Project Structure & Architecture
 
-Important version properties live in `gradle.properties`:
-
-```properties
-minecraft_version=1.21.1
-minecraft_version_range=[1.21.1,26.0)
-neo_version=21.1.232
-neo_version_range=[21.1.232,26.0)
-opc_version=neoforge-1.21.1-0.27.5
-create_version=mc1.21.1-6.0.9
-cbc_version=5.11.7
-rpl_version=2.1.2
-mod_version=2.0.0
-```
-
-## CI-Parity Build
-
-GitHub Actions runs:
-
-```sh
-./gradlew --no-daemon build :opac-better-protection:jar test
-```
-
-On Windows, use:
-
-```powershell
-.\gradlew.bat --no-daemon build :opac-better-protection:jar test
-```
-
-The uploaded release artifact comes from:
+The project is structured as a multi-module Gradle project:
 
 ```text
-opac-better-protection/build/libs/opac-better-protection-*.jar
+opac-better-protection/
+├── customclaims-core/            # Foundational OPaC adapters, territory, permissions, storage, IWarfareBridge
+├── customclaims-protection/      # Protection services, explosions, /claimrules, GUI, foreign limits
+├── customclaims-create/          # Create contraption and breaker movement hooks
+├── customclaims-aeronautics/     # Aeronautics/Offroad borehead and Sable assembly hooks
+├── customclaims-big-cannons/     # Create Big Cannons launch hooks and impact logging
+└── opac-better-protection/       # Release distribution module (bundles and jarjars dependencies)
 ```
 
-## Release Checklist
+### Packaging Mechanism (JarJar & Fat-Jar)
 
-Before release, run:
+In NeoForge / Java 21:
+- Modules sharing package namespaces (`dev.customclaims.*`) cannot be placed loosely on the module path due to JPMS split-package restrictions.
+- The `opac-better-protection` module solves this by embedding `customclaims-core` into `META-INF/jarjar/` and merging class outputs of the other submodules into the single distribution jar:
+  ```text
+  opac-better-protection/build/libs/opac-better-protection-<version>.jar
+  ```
+
+---
+
+## Build & Test Commands
+
+All commands should be executed from the repository root (`c:\Users\svinpepe\opac-better-protection`).
+
+### 1. Full Build & Test (CI Parity)
+
+Executes the full compilation, test suite, and packages the production distribution jar:
 
 ```powershell
 .\gradlew.bat --no-daemon :opac-better-protection:jar test
 ```
 
-Smoke-test the built jar on the baseline `Minecraft 1.21.1 + NeoForge 21.1.232` with OPaC:
+On Linux or macOS:
 
-- server boots without mixin, classloading, packet, or config errors;
-- `/claimrules gui`, `/claimrules explosions status`, `/claimrules create status`,
-  and `/claimrules assembly status` work;
-- protection blocks foreign peaceful interactions when limits are reached;
-- Create machine protection works when Create is installed;
-- Aeronautics/Offroad bore protection works when Aeronautics/Offroad is installed;
-- Create Big Cannons launch protection works when CBC is installed.
+```sh
+./gradlew --no-daemon :opac-better-protection:jar test
+```
 
-## Focused Commands
+### 2. Fast Focused Compilation
 
-Compile all functional protection modules:
+Quickly compiles Java sources across all functional modules without packaging or running long tasks:
 
 ```powershell
 .\gradlew.bat --no-daemon "-Dorg.gradle.workers.max=1" :customclaims-core:compileJava :customclaims-protection:compileJava :customclaims-create:compileJava :customclaims-aeronautics:compileJava :customclaims-big-cannons:compileJava -q
 ```
 
-Build the distribution jar:
+### 3. Build Distribution Jar Only
 
 ```powershell
 .\gradlew.bat --no-daemon :opac-better-protection:jar
 ```
 
-Run test suite:
+The resulting jar will be located at:
+`opac-better-protection/build/libs/opac-better-protection-<version>.jar`
+
+### 4. Run Unit Tests Only
 
 ```powershell
 .\gradlew.bat --no-daemon test
 ```
 
-If Gradle has just downloaded plugins or a worker daemon is stuck, stop daemons:
+### 5. Stopping Gradle Daemons
+
+If locks or worker daemons conflict after running tasks:
 
 ```powershell
 .\gradlew.bat --stop
 ```
 
-## Source Layout
+---
 
-Each functional module keeps normal Java sources under:
+## Running Development Environments
 
-```text
-<module>/src/main/java/dev/customclaims/<area>/
+NeoForge userdev provides pre-configured run configurations:
+
+### Dedicated Server Run
+
+```powershell
+.\gradlew.bat :opac-better-protection:runServer
 ```
 
-Resources live under:
+Launches a headless NeoForge dedicated server in the `run/server/` working directory.
 
-```text
-<module>/src/main/resources/
+### Client Run
+
+```powershell
+.\gradlew.bat :opac-better-protection:runClient
 ```
 
-Generated resources are ignored by git through `**/src/generated/`.
+Launches the Minecraft client in `run/client/` with debug logging enabled.
 
-## Working Rules
+---
 
-- Prefer existing services over adding logic directly to event handlers.
-- Keep command classes responsible for parsing, permission checks, and messages;
-  move behavior into services.
-- Keep config keys stable unless a migration or release note is planned.
-- Do not add hard dependencies from optional compat modules to absent target
-  mods without a mod-load guard; Aeronautics/Offroad and Create hooks must remain optional.
-- Keep client-only UI and keybind code behind client-side checks.
-- Update `docs/configuration.md` whenever a config key, default, or meaning changes.
-- Update `docs/server-admin.md` whenever a command, permission, runtime file, or operator-visible behavior changes.
-- Update `docs/architecture.md` when module boundaries, service ownership, or persistence changes.
+## Soft Bridge Development Rules
+
+1. **Decoupled Warfare:** Never add a Gradle dependency on `opac-warfare` or import Warfare classes directly into `customclaims-protection`. Use `IWarfareBridge` and `dev.customclaims.protection.compat.WarfareBridgeHolder`.
+2. **Mod-Loaded Guards:** Any code interacting with Create, Create Big Cannons, or Aeronautics must be guarded by `ModList.get().isLoaded("<modid>")` checks and separated into compat classes to prevent classloader errors when the target mod is absent.
+3. **Client Isolation:** UI code (such as `ClaimRulesScreen`), key mappings, and client packet receivers must be isolated behind `FMLEnvironment.dist == Dist.CLIENT` checks.
+4. **Service Container Pattern:** Keep event listeners and command classes thin. Place domain logic in service classes (`ExplosionProtectionService`, `CreateMachinesProtectionService`, etc.).
+
+---
+
+## Pre-Commit Checklist
+
+Before submitting changes:
+1. Run `.\gradlew.bat --no-daemon :opac-better-protection:jar test` to verify build and test success.
+2. If adding or modifying config keys, update `ProtectionConfig.java` / `CoreConfig.java` AND `docs/configuration.md`.
+3. If modifying commands or permissions, update `docs/server-admin.md` and `AGENTS.md`.
+4. Ensure all documentation links are valid relative markdown links.

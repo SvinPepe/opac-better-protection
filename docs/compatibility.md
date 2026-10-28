@@ -1,73 +1,96 @@
 # Compatibility Policy
 
-This project publishes one official server jar:
+This document defines the supported platforms, dependencies, mod compatibility matrix, and verification procedures for **Open Parties and Claims: Better Protection**.
+
+## Official Distribution Artifact
+
+This project publishes a single distribution jar for NeoForge servers:
 
 ```text
 opac-better-protection/build/libs/opac-better-protection-<version>.jar
 ```
 
-## Baseline And Experimental Range
+Example: `opac-better-protection-2.0.0.jar`.
 
-The full tested baseline remains:
+---
 
-- Minecraft `1.21.1`
-- NeoForge `21.1.232`
-- Java `21`
-- Open Parties and Claims `neoforge-1.21.1-0.27.5` or newer for `1.21.1`
+## Verified Dependency Matrix
 
-The jar metadata is intentionally wider for experimental same-jar probes:
+The baseline compile and verified test stack:
 
-- Minecraft range: `[1.21.1,26.0)`
-- NeoForge range: `[21.1.232,26.0)`
+| Component | Target Version | Supported Range | Status |
+| --- | --- | --- | --- |
+| **Minecraft** | `1.21.1` | `[1.21.1,26.0)` | Baseline verified (probes supported through 1.21.11) |
+| **NeoForge** | `21.1.232` | `[21.1.232,26.0)` | Baseline verified |
+| **Java Toolchain** | `21` | `21` | Required |
+| **Open Parties and Claims (OPaC)** | `neoforge-1.21.1-0.27.5` | `[0.27.5,)` | Required dependency |
+| **Open Parties and Claims: Warfare** | `2.0.0` | `[2.0.0,)` | Optional companion mod (via dynamic soft bridge) |
+| **Create** | `mc1.21.1-6.0.9` | `[6.0.9,)` | Optional integration |
+| **Create Big Cannons (CBC)** | `5.11.7` | `[5.11.7,)` | Optional integration |
+| **Resourceful Packet Library (RPL)** | `2.1.2` | `[2.1.2,)` | Required by CBC |
+| **Create Aeronautics / Offroad** | `1.3.0` | `[1.3.0,)` | Optional integration |
+| **Sable** | `2.0.3` | `[2.0.3,)` | Optional integration |
 
-That means newer Minecraft 1.21.x and NeoForge 21.x/25.x builds can try the same
-jar, but only the baseline is considered verified until a server boot and gameplay
-smoke test pass.
+---
 
-**Minecraft 26.x is not supported by this jar.** Minecraft 26.1 introduced
-breaking API changes incompatible with this 1.21.x build:
+## Experimental Range & Metadata
 
-- `net.minecraft.resources.ResourceLocation` was renamed to `net.minecraft.resources.Identifier`.
-- `FMLEnvironment.dist` (static field) was removed in favour of `FMLEnvironment.getDist()`.
-- Java 25 is now required (this jar targets Java 21).
+The jar metadata in `neoforge.mods.toml` specifies:
+- `minecraft_version_range = "[1.21.1,26.0)"`
+- `neo_version_range = "[21.1.232,26.0)"`
 
-A separate port for 26.x will be released as a distinct artifact.
+This intentionally permits operators to test the jar on newer 1.21.x maintenance releases (such as 1.21.2 through 1.21.11) without loader rejections. However, only `1.21.1` is considered fully verified until the candidate passes the Compatibility Probe below.
 
-Optional integrations are compiled against the `1.21.1` stack:
+---
 
-- Create `mc1.21.1-6.0.9` or newer
-- Create Aeronautics/Offroad `1.3.0` or newer
-- Sable `2.0.3` for optional assembly protection; it must satisfy its own Create dependency
-- Create Big Cannons `5.11.7` or newer
+## Incompatible Platforms & Versions
 
-## Unsupported Targets
+### Minecraft 26.x
+**Minecraft 26.x is strictly incompatible with this build.**
+Attempting to run this jar on Minecraft 26.1+ will fail due to breaking API and runtime changes:
+1. `net.minecraft.resources.ResourceLocation` was renamed to `net.minecraft.resources.Identifier`.
+2. `net.neoforged.fml.loading.FMLEnvironment.dist` (static field) was removed in favor of `FMLEnvironment.getDist()`.
+3. Java 25 is required for 26.x, whereas this jar is compiled for Java 21.
 
-The official jar is not promised to work on older `1.20.x`, Minecraft `26.x`,
-Forge, Fabric, or Quilt targets.
+A dedicated 26.x port will be released as a separate artifact.
 
-Open Parties and Claims publishes many loader and Minecraft-version builds, but
-this addon uses Minecraft, NeoForge, optional compat-mod, and mixin APIs that
-are not binary-stable across that whole matrix. Broad metadata is a convenience
-for nearby NeoForge probes, not a guarantee that Create, CBC, Aeronautics, or Sable
-internals still match on every candidate.
+### Other Mod Loaders
+- **Fabric / Quilt:** Not supported by this jar.
+- **Legacy Forge:** Not supported.
+- **Minecraft 1.20.x and older:** Not supported.
 
-## Compatibility Probe
+---
 
-Use this workflow for any candidate 1.21.x version:
+## Companion Mod: Open Parties and Claims: Warfare
 
-1. Build the normal release jar:
+[Open Parties and Claims: Warfare](https://github.com/SvinPepe/opac-warfare) is designed to run alongside Better Protection:
+- **No Hard Dependency:** Neither mod requires the other at compile time or at runtime.
+- **Automatic Soft Integration:** When both jars are installed on a NeoForge server, Better Protection queries the warfare state via `IWarfareBridge`.
+- **War Chunk Behavior:** In active contested chunks, explosion filtering is bypassed, CBC cannons are allowed to fire, and Create/Aeronautics drills operate normally for war combatants.
 
+---
+
+## Compatibility Probe Procedure
+
+When verifying candidate updates for Minecraft 1.21.x:
+
+1. **Build Artifact:**
    ```powershell
-   .\gradlew.bat --no-daemon build :opac-better-protection:jar test
+   .\gradlew.bat --no-daemon :opac-better-protection:jar test
    ```
 
-2. Install that same jar on the candidate server together with the matching OPaC
-   build and any optional compat mods available for that Minecraft version.
-3. Confirm the server boots without mixin, classloading, packet, or config
-   errors.
-4. Run the smoke checks from `docs/development.md`.
-5. Document the candidate as verified only after those checks pass.
+2. **Deploy on Test Server:**
+   Install the built jar on a test server running the candidate Minecraft/NeoForge build along with OPaC and optional compat mods.
 
-If a candidate fails because of Minecraft, NeoForge, OPaC, or compat-mod API
-drift, document it as unsupported even though the broad experimental metadata
-allows the loader to try the jar.
+3. **Verify Server Boot:**
+   Confirm that the server boots cleanly without `ClassNotFoundException`, `NoSuchMethodError`, mixin apply failures, or packet registry errors.
+
+4. **Execute Functional Checks:**
+   - Execute `/claimrules explosions status`, `/claimrules create status`, and `/claimrules assembly status`.
+   - Test explosion protection against TNT in a claimed chunk.
+   - Verify that Create drills/saws are blocked in foreign claims with `/claimrules create disable`.
+   - If CBC is installed, verify that firing a cannon from a protected claim displays the blocked alert.
+   - If Aeronautics is installed, verify that borehead bearings stall at claim borders.
+   - If Warfare is installed, verify that active contested war chunks allow explosions and participant machinery.
+
+Document the candidate version as verified only after all checks pass.

@@ -1,25 +1,32 @@
 # Configuration
 
-NeoForge writes common config files under the server `config/` directory. The
-file names are based on each module mod id, for example
-`customclaims_protection-common.toml`.
+Configuration files are written by NeoForge to the server `config/` directory. File names correspond to module mod IDs:
+- `config/customclaims_core-common.toml`
+- `config/customclaims_protection-common.toml`
 
-Values below are the defaults from the current Java config classes.
+All keys, types, and defaults documented below are verified against the Java source classes `CoreConfig.java` and `ProtectionConfig.java`.
+
+---
 
 ## `customclaims_core-common.toml`
 
-| Key | Default | Meaning |
-| --- | --- | --- |
-| `debug_logging` | `false` | Enables additional server-side Custom Claims debug logging. |
-| `op_permission_level` | `2` | Operator level accepted by the permission service. |
-| `metrics.enabled` | `true` | Enables anonymous heartbeat metrics on dedicated servers. |
-| `metrics.endpoint` | `""` | HTTP(S) heartbeat endpoint; empty means no request is sent. |
-| `permissions.default_player_permissions` | see below | Permission nodes granted to every player without requiring OP or tags. |
+Defined in `dev.customclaims.core.config.CoreConfig`.
 
-Default player permissions:
+| Config Key | Type | Default | Valid Range | Meaning |
+| --- | --- | --- | --- | --- |
+| `debug_logging` | Boolean | `false` | `true`, `false` | Enables verbose server-side debug logging for Custom Claims services. |
+| `op_permission_level` | Integer | `2` | `0` .. `4` | Minimum operator level accepted for administrative commands and bypass checks. |
+| `metrics.enabled` | Boolean | `true` | `true`, `false` | Enables anonymous heartbeat metrics for dedicated servers. |
+| `metrics.endpoint` | String | `"https://customclaims-metrics.svinpepe.workers.dev/heartbeat"` | URL or empty string | HTTP(S) endpoint receiving anonymous metrics heartbeats. Set to `""` to prevent network requests. |
+| `permissions.default_player_permissions` | List of Strings | see below | Permission nodes | Permission nodes automatically granted to every connected player without requiring OP or permission plugins. |
+
+### Default Player Permissions
 
 ```toml
-permissions.default_player_permissions = [
+[permissions]
+default_player_permissions = [
+  "opac.warfare.start",
+  "opac.warfare.status",
   "opac.protection.claimrules",
   "opac.protection.explosions.status",
   "opac.protection.explosions.toggle",
@@ -27,6 +34,8 @@ permissions.default_player_permissions = [
   "opac.protection.create.toggle",
   "opac.protection.assembly.status",
   "opac.protection.assembly.toggle",
+  "customclaims.war.start",
+  "customclaims.war.status",
   "customclaims.claimrules",
   "customclaims.explosions.status",
   "customclaims.explosions.toggle",
@@ -37,45 +46,61 @@ permissions.default_player_permissions = [
 ]
 ```
 
+---
+
 ## `customclaims_protection-common.toml`
 
-| Key | Default | Meaning |
-| --- | --- | --- |
-| `foreign_interaction.block_break_limit` | `0` | Runtime-session block break limit for foreign peaceful claims. |
-| `foreign_interaction.block_place_limit` | `0` | Runtime-session block place limit for foreign peaceful claims. |
-| `foreign_interaction.limit_reset_interval_seconds` | `3600` | Global runtime reset interval for foreign claim counters. |
-| `entity_interaction.contested_exceptions` | `["corpse:corpse"]` | Exact entity type IDs whose right-click interactions grant an OPaC bypass to attacking/defending sides in contested chunks. |
-| `claimrules.toggle_cooldown_seconds` | `600` | Cooldown for side-level `/claimrules` toggles. |
-| `explosions.custom_filter_enabled` | `true` | Filters block damage from explosions in protected claimed chunks via direct OPAC API sync. |
-| `explosions.allow_in_war_chunks` | `true` | Does not filter explosion block damage in contested war chunks (via IWarfareBridge soft hook). |
-| `big_cannons.block_projectile_launch_from_protected_claims` | `true` | Cancels Create Big Cannons projectiles spawned from protected claimed chunks and displays an actionbar alert. |
-| `big_cannons.log_blocked_projectiles` | `true` | Logs Create Big Cannons projectiles blocked by explosion protection. |
+Defined in `dev.customclaims.protection.config.ProtectionConfig`.
 
-The runtime `/claimrules create` side toggle is persisted in `protection/create-machines.txt`. It controls foreign Create machines (drills, saws, deployers) across borders while allowing claim owners/members to freely use their machines inside their claims.
+| Config Key | Type | Default | Valid Range | Meaning |
+| --- | --- | --- | --- | --- |
+| `foreign_interaction.block_break_limit` | Integer | `0` | `0` .. `100000` | Maximum number of blocks a foreign player can break in peaceful claims during a runtime session. `0` disables foreign breaking entirely. |
+| `foreign_interaction.block_place_limit` | Integer | `0` | `0` .. `100000` | Maximum number of blocks a foreign player can place in peaceful claims during a runtime session. `0` disables foreign placing entirely. |
+| `foreign_interaction.limit_reset_interval_seconds` | Integer | `3600` | `1` .. `604800` | Global interval in seconds between automatic resets of foreign player interaction counters. (Default: 3600 = 1 hour). |
+| `claimrules.toggle_cooldown_seconds` | Integer | `600` | `0` .. `86400` | Cooldown period in seconds required between side-level `/claimrules` toggles (explosions, Create machines, contraption assembly). (Default: 600 = 10 minutes). |
+| `explosions.custom_filter_enabled` | Boolean | `true` | `true`, `false` | Enables Custom Claims explosion filtering. When true, explosion block damage is cancelled in claimed chunks where side explosion protection is enabled. |
+| `explosions.allow_in_war_chunks` | Boolean | `true` | `true`, `false` | When true, explosion block filtering is disabled in active contested war chunks (via `IWarfareBridge`), allowing explosions to breach fortifications during war. |
+| `big_cannons.block_projectile_launch_from_protected_claims` | Boolean | `true` | `true`, `false` | When true, Create Big Cannons projectiles fired from inside a protected claimed chunk are cancelled before munitions are spent, and an actionbar alert is shown. |
+| `big_cannons.log_blocked_projectiles` | Boolean | `true` | `true`, `false` | When true, logs Create Big Cannons projectile launches blocked by claim protection to the server console and action log. |
+| `entity_interaction.contested_exceptions` | List of Strings | `["corpse:corpse"]` | List of `namespace:path` | Exact entity type identifiers whose right-click interactions bypass OPaC claim cancellation for participants in contested war chunks. |
 
-`entity_interaction.contested_exceptions` accepts exact `namespace:path` IDs, not
-wildcards or tags. An empty list (`[]`) disables these exceptions. IDs for mods
-that are not installed are harmless; Corpse is not a required dependency. The
-server reads the current list on each interaction, including after a config reload.
-For example:
+### Contested Entity Exceptions
+
+The `entity_interaction.contested_exceptions` key allows right-clicking specified entities inside contested war chunks without OPaC claim interference:
+- By default, it contains `["corpse:corpse"]`, enabling players to retrieve their death corpses during an active siege.
+- Accepts exact `namespace:path` IDs only (no wildcards or tags).
+- If the entity mod (e.g. Corpse) is not installed, the entry is harmless and ignored.
+- Set to `[]` to disable entity bypasses entirely.
+- Changes take effect immediately on config reload.
+
+Example:
 
 ```toml
 [entity_interaction]
-contested_exceptions = ["corpse:corpse", "minecraft:chest_minecart"]
+contested_exceptions = [
+  "corpse:corpse",
+  "gravestone:gravestone"
+]
 ```
 
-The independent `/claimrules assembly` side toggle is persisted in `protection/create-assemblies.txt`. It controls Create and optional Sable contraption assembly. On the first upgrade that creates this file, existing `create` values and their cooldowns are copied to `assembly`.
+---
 
-Wither blocking and villager/trader damage protection are opt-in. With the defaults above, CustomClaims neither cancels Wither spawns nor villager/trader damage, leaving vanilla and OPaC mechanics unchanged.
+## Runtime State Files (`world/customclaims/`)
 
-NeoForge preserves values already present in server config files. Existing servers that want the new passive behavior must set all three `wither_rules.disable_wither_summon_in_*` values and `villager_protection.enable_villager_protection` to `false`, or regenerate the protection config.
+Certain toggle states and cooldown timers are persisted in the world folder under `world/customclaims/protection/`:
 
-The removed `storage_rules.*` keys are obsolete and can be deleted from existing config files. Storage access and breaking are now governed by vanilla and OPaC only.
+- `protection/explosion-protection.txt`: Persistent side-level explosion protection toggles (`sideId=true|false`).
+- `protection/create-machines.txt`: Persistent side-level Create machine permissions (`sideId=true|false`).
+- `protection/create-assemblies.txt`: Persistent side-level contraption assembly permissions (`sideId=true|false`).
+- `protection/claimrule-toggle-cooldowns.txt`: Cooldown expiration timestamps per side and rule (`sideId:rule=epochSecond`).
 
-## Operational Defaults To Review
+---
 
-- Tighten `permissions.default_player_permissions` if normal players should not
-  toggle side rules.
-- `foreign_interaction.block_break_limit = 0` and
-  `foreign_interaction.block_place_limit = 0` mean foreign peaceful block
-  break/place actions are not allowed by the limit service.
+## Obsolete & Removed Keys
+
+In Better Protection 2.0:
+- **`wither_rules.*`** (`disable_wither_summon_in_overworld`, etc.): Removed. Wither spawning and mob griefing are governed authoritatively by vanilla Minecraft game rules and OPaC claim settings.
+- **`villager_protection.*`** (`enable_villager_protection`, etc.): Removed. Villager protection is governed by OPaC and standard protections.
+- **`storage_rules.*`**: Removed. Container access and breaking are governed authoritatively by OPaC claim permissions.
+
+If upgrading from 1.x, these obsolete sections may be safely deleted from your `.toml` configuration files.
