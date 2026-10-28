@@ -3,7 +3,7 @@
 This project publishes one official server jar:
 
 ```text
-opac-warfare/build/libs/opac-warfare-<version>.jar
+opac-better-protection/build/libs/opac-better-protection-<version>.jar
 ```
 
 ## Baseline And Experimental Range
@@ -39,7 +39,6 @@ Optional integrations are compiled against the `1.21.1` stack:
 - Create Aeronautics/Offroad `1.3.0` or newer
 - Sable `2.0.3` for optional assembly protection; it must satisfy its own Create dependency
 - Create Big Cannons `5.11.7` or newer
-- Xaero Minimap or Xaero World Map on compatible clients
 
 ## Unsupported Targets
 
@@ -49,8 +48,8 @@ Forge, Fabric, or Quilt targets.
 Open Parties and Claims publishes many loader and Minecraft-version builds, but
 this addon uses Minecraft, NeoForge, optional compat-mod, and mixin APIs that
 are not binary-stable across that whole matrix. Broad metadata is a convenience
-for nearby NeoForge probes, not a guarantee that Create, CBC, Aeronautics, Sable, or
-Xaero internals still match on every candidate.
+for nearby NeoForge probes, not a guarantee that Create, CBC, Aeronautics, or Sable
+internals still match on every candidate.
 
 ## Compatibility Probe
 
@@ -59,7 +58,7 @@ Use this workflow for any candidate 1.21.x version:
 1. Build the normal release jar:
 
    ```powershell
-   .\gradlew.bat --no-daemon build :opac-warfare:jar
+   .\gradlew.bat --no-daemon build :opac-better-protection:jar test
    ```
 
 2. Install that same jar on the candidate server together with the matching OPaC
